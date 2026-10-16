@@ -1,0 +1,23 @@
+{
+  "name": "gocacheshield",
+  "version": "1.0.0",
+  "description": "Smart Cache Protection for Node.js and Nest.js — Coalescing, Bulkheading, TTL Jitter & Negative Caching",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "cache",
+    "stampede",
+    "thundering-herd",
+    "coalescing",
+    "singleflight",
+    "nestjs",
+    "redis",
+    "resilience"
+  ],
+  "author": "GoCacheShield Authors",
+  "license": "MIT"
+}

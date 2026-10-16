@@ -1,0 +1,29 @@
+{
+  "name": "gocacheshield/cacheshield",
+  "description": "Production-grade smart cache protection for PHP and Laravel — Stampede coalescing, bulkhead, TTL jitter & penetration defense",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "GoCacheShield Authors"
+    }
+  ],
+  "require": {
+    "php": ">=7.4|^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "GoCacheShield\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "GoCacheShield\\Laravel\\CacheShieldServiceProvider"
+      ],
+      "aliases": {
+        "CacheShield": "GoCacheShield\\Laravel\\Facades\\CacheShield"
+      }
+    }
+  }
+}
