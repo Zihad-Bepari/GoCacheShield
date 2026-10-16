@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 type User struct {

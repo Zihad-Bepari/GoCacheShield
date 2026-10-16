@@ -1,9 +1,9 @@
 # GoCacheShield — Production-Grade Smart Cache Protection Library
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/gocacheshield/gocacheshield.svg)](https://pkg.go.dev/github.com/gocacheshield/gocacheshield)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Zihad-Bepari/GoCacheShield.svg)](https://pkg.go.dev/github.com/Zihad-Bepari/GoCacheShield)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gocacheshield/gocacheshield)](https://goreportcard.com/report/github.com/gocacheshield/gocacheshield)
-[![CI](https://github.com/gocacheshield/gocacheshield/actions/workflows/ci.yml/badge.svg)](https://github.com/gocacheshield/gocacheshield/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Zihad-Bepari/GoCacheShield)](https://goreportcard.com/report/github.com/Zihad-Bepari/GoCacheShield)
+[![CI](https://github.com/Zihad-Bepari/GoCacheShield/actions/workflows/ci.yml/badge.svg)](https://github.com/Zihad-Bepari/GoCacheShield/actions)
 
 **GoCacheShield** is a production-grade, zero-dependency, smart cache resilience and concurrency protection library available natively for **Go**, **Node.js**, **Nest.js**, **PHP**, and **Laravel**.
 
@@ -11,11 +11,11 @@ It does **not** replace your existing cache storage (Redis, Memcached, or In-Mem
 
 ### 📦 Ecosystem Installations
 
-| Platform | Package Manager | Package Link |
+| Platform | Direct Installation | Package Source |
 | :--- | :--- | :--- |
-| **Go** | `go get github.com/gocacheshield/gocacheshield` | Core Go Engine |
-| **Node.js & Nest.js** | `npm install gocacheshield` | [`packages/node`](packages/node) |
-| **PHP & Laravel** | `composer require gocacheshield/cacheshield` | [`packages/php`](packages/php) |
+| **Go** | `go get github.com/Zihad-Bepari/GoCacheShield` | Core Go Engine |
+| **Node.js & Nest.js** | `npm install github:Zihad-Bepari/GoCacheShield#main:packages/node` | [`packages/node`](packages/node) |
+| **PHP & Laravel** | Composer VCS / Path repository | [`packages/php`](packages/php) |
 
 ---
 
@@ -68,7 +68,7 @@ BenchmarkCoalescer_RawDo-12              1,984,629   596.60 ns/op      47 B/op  
 ### Installation
 
 ```bash
-go get github.com/gocacheshield/gocacheshield
+go get github.com/Zihad-Bepari/GoCacheShield
 ```
 
 ### Basic Usage with Strongly-Typed Generics
@@ -82,7 +82,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 type User struct {
@@ -129,8 +129,8 @@ GoCacheShield is completely decoupled from any specific Redis client. Use the pl
 
 ```go
 import (
-	"github.com/gocacheshield/gocacheshield"
-	"github.com/gocacheshield/gocacheshield/adapters/redis"
+	"github.com/Zihad-Bepari/GoCacheShield"
+	"github.com/Zihad-Bepari/GoCacheShield/adapters/redis"
 	goredis "github.com/redis/go-redis/v9"
 )
 
@@ -192,7 +192,7 @@ GoCacheShield is engineered to run seamlessly across **5 major backend platforms
 
 * **Package Installation:**
   ```bash
-  go get github.com/gocacheshield/gocacheshield
+  go get github.com/Zihad-Bepari/GoCacheShield
   ```
 * **Target File:** `main.go` or your service layer (e.g. `internal/service/product.go`).
 * **Description:**  
@@ -209,7 +209,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 // 1. Define your entity struct
@@ -266,9 +266,11 @@ func main() {
 > - Node.js 18.0.0 or higher.  
 > - **Zero Native C++ Dependencies:** Built in 100% pure JavaScript/TypeScript. It requires **no `node-gyp` or C++ compiler**, meaning it installs instantly on any hosting (including cPanel Node.js Selector, Passenger, Vercel, and Docker).
 
-* **Package Installation:**
+* **Package Installation (Direct from GitHub):**
   ```bash
-  npm install gocacheshield
+  npm install github:Zihad-Bepari/GoCacheShield#main:packages/node
+  # Or from cloned repository:
+  # npm install ./packages/node
   ```
 * **Target File:** `server.js`, `app.js`, or inside your route files (e.g. `routes/products.js`).
 * **Description:**  
@@ -333,9 +335,9 @@ app.listen(3000, () => console.log('🚀 Node.js server running at http://localh
 > - Nest.js 9+ or 10+.  
 > - **Full TypeScript Type Safety:** Ships with complete `index.d.ts` type declarations.
 
-* **Package Installation:**
+* **Package Installation (Direct from GitHub):**
   ```bash
-  npm install gocacheshield
+  npm install github:Zihad-Bepari/GoCacheShield#main:packages/node
   ```
 * **Target File:** Inside your Service class (e.g. `src/products/products.service.ts`).
 * **Description:**  
@@ -399,9 +401,19 @@ export class ProductsService {
 > - **100% cPanel & Shared Hosting Ready:** Uses the OS standard `/tmp` directory for atomic, non-blocking file locking (`flock`). Requires **no root access, no Redis, and no custom PHP extensions**.
 
 * **Package Installation:**
-  ```bash
-  composer require gocacheshield/cacheshield
+  Add the package directory or Git repository to your `composer.json`:
+  ```json
+  "repositories": [
+      {
+          "type": "path",
+          "url": "./packages/php"
+      }
+  ],
+  "require": {
+      "gocacheshield/cacheshield": "*"
+  }
   ```
+  *(Or run `composer require gocacheshield/cacheshield` if hosting `packages/php` as its own repository).*
 * **Target File:** `api.php`, `index.php`, or any endpoint script.
 * **Description:**  
   Solves the classical PHP-FPM "Share-Nothing" limitation. When multiple PHP processes miss a cache item at the exact same millisecond, Process 1 acquires an exclusive lock and loads from MySQL, while Processes 2 through 100 wait on a shared lock and receive the freshly cached result without duplicating database load.
@@ -458,9 +470,11 @@ try {
 > - **Auto-Discovery Enabled:** Zero manual provider registration needed. Works out of the box with your existing Laravel cache driver (Redis, Memcached, Database, or File).
 
 * **Package Installation:**
+  Link `packages/php` in your Laravel `composer.json` or install directly:
   ```bash
   composer require gocacheshield/cacheshield
   ```
+  *(Via local path repository in `composer.json` or direct VCS).*
 * **Target File:** Inside your Controller (e.g. `app/Http/Controllers/ProductController.php`) or Route file (`routes/api.php`).
 * **Description:**  
   Provides an elegant Laravel Facade (`CacheShield::getOrLoad`). Integrates directly with Eloquent ORM and Query Builder models to ensure high-concurrency traffic spikes never melt your database.

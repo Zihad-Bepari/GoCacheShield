@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield/internal/bulkhead"
-	"github.com/gocacheshield/gocacheshield/internal/coalescer"
-	"github.com/gocacheshield/gocacheshield/internal/jitter"
-	"github.com/gocacheshield/gocacheshield/internal/negcache"
+	"github.com/Zihad-Bepari/GoCacheShield/internal/bulkhead"
+	"github.com/Zihad-Bepari/GoCacheShield/internal/coalescer"
+	"github.com/Zihad-Bepari/GoCacheShield/internal/jitter"
+	"github.com/Zihad-Bepari/GoCacheShield/internal/negcache"
 )
 
 // Engine is the central cache protection orchestrator.

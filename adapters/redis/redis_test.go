@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
-	"github.com/gocacheshield/gocacheshield/adapters/redis"
+	"github.com/Zihad-Bepari/GoCacheShield"
+	"github.com/Zihad-Bepari/GoCacheShield/adapters/redis"
 )
 
 type mockRedisClient struct {

@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 // TestStress_HeavyConcurrentMissesOnSameKey tests 1,000 concurrent goroutines hitting the same cold key.

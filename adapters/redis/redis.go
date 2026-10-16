@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 // ErrNil is typically returned by Redis clients when a key does not exist (e.g. redis.Nil).

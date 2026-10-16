@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 type Product struct {

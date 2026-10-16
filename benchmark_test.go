@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
-	"github.com/gocacheshield/gocacheshield/internal/bulkhead"
-	"github.com/gocacheshield/gocacheshield/internal/coalescer"
+	"github.com/Zihad-Bepari/GoCacheShield"
+	"github.com/Zihad-Bepari/GoCacheShield/internal/bulkhead"
+	"github.com/Zihad-Bepari/GoCacheShield/internal/coalescer"
 )
 
 type BenchmarkEntity struct {

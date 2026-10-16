@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocacheshield/gocacheshield"
+	"github.com/Zihad-Bepari/GoCacheShield"
 )
 
 // FlakyStore simulates an external cache (e.g. Redis) that experiences network outages and errors.

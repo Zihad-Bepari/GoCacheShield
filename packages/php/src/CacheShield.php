@@ -31,6 +31,11 @@ class CacheShield
      */
     public function getOrLoad(string $key, int $ttlSeconds, Closure $loader)
     {
+        // Opportunistic cleanup of stale lock files (1 in 100 requests)
+        if (mt_rand(1, 100) === 1) {
+            $this->cleanStaleFiles();
+        }
+
         // 1. Check Negative Cache
         if ($this->isNegative($key)) {
             throw new NotFoundException();
@@ -183,6 +188,26 @@ class CacheShield
         $cacheFile = $this->lockDir . '/' . md5('data:' . $key) . '.cache';
         if (file_exists($cacheFile)) {
             @unlink($cacheFile);
+        }
+    }
+
+    /**
+     * Clean up stale temporary locks and expired files older than 10 minutes.
+     */
+    protected function cleanStaleFiles(): void
+    {
+        if (!is_dir($this->lockDir)) {
+            return;
+        }
+        $files = @glob($this->lockDir . '/*');
+        if (!$files) {
+            return;
+        }
+        $now = time();
+        foreach ($files as $file) {
+            if (is_file($file) && ($now - @filemtime($file)) > 600) {
+                @unlink($file);
+            }
         }
     }
 }

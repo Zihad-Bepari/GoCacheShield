@@ -14,7 +14,8 @@ const ErrCacheMiss = new CacheShieldError('Key not found in cache', 'ERR_CACHE_M
 const ErrClosed = new CacheShieldError('Engine is closed', 'ERR_CLOSED');
 
 class MemoryStore {
-  constructor() {
+  constructor(capacity = 10000) {
+    this.capacity = capacity;
     this.items = new Map();
   }
 
@@ -25,10 +26,17 @@ class MemoryStore {
       this.items.delete(key);
       return null;
     }
+    // Refresh access order for LRU
+    this.items.delete(key);
+    this.items.set(key, item);
     return item.value;
   }
 
   async set(key, value, ttlSeconds) {
+    if (this.items.size >= this.capacity) {
+      const oldestKey = this.items.keys().next().value;
+      if (oldestKey) this.items.delete(oldestKey);
+    }
     const expiresAt = ttlSeconds > 0 ? Date.now() + (ttlSeconds * 1000) : 0;
     this.items.set(key, { value, expiresAt });
   }
