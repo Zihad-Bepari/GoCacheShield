@@ -120,3 +120,11 @@ test('Invalidation: removes item from cache', async () => {
   const v2 = await shield.getOrLoad('counter', 60, loader);
   assert.equal(v2, 2, 'after invalidation, loader must reload fresh data');
 });
+
+test('createNestCacheShield helper returns working instance', async () => {
+  const { createNestCacheShield } = require('../src/index');
+  assert.equal(typeof createNestCacheShield, 'function');
+  const nestShield = createNestCacheShield({ maxConcurrentLoads: 5 });
+  const res = await nestShield.getOrLoad('nest-test', 30, async () => 'hello nest');
+  assert.equal(res, 'hello nest');
+});

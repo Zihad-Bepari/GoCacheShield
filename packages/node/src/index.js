@@ -252,11 +252,16 @@ class CacheShield {
   }
 }
 
+function createNestCacheShield(options = {}) {
+  return new CacheShield(options);
+}
+
 module.exports = {
   CacheShield,
   MemoryStore,
   ErrNotFound,
   ErrTooManyLoads,
   ErrCacheMiss,
-  ErrClosed
+  ErrClosed,
+  createNestCacheShield
 };
