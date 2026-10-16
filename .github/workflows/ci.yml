@@ -56,4 +56,3 @@ jobs:
 
       - name: Run Node Tests
         run: npm test
-        working-directory: packages/node

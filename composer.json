@@ -1,0 +1,30 @@
+{
+  "name": "zihad-bepari/gocacheshield",
+  "description": "Production-grade smart cache resilience and concurrency protection library for PHP and Laravel",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Zihad Bepari",
+      "email": "2215151139@uits.edu.bd"
+    }
+  ],
+  "require": {
+    "php": ">=7.4|^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "GoCacheShield\\": "packages/php/src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "GoCacheShield\\Laravel\\CacheShieldServiceProvider"
+      ],
+      "aliases": {
+        "CacheShield": "GoCacheShield\\Laravel\\Facades\\CacheShield"
+      }
+    }
+  }
+}

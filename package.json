@@ -1,0 +1,32 @@
+{
+  "name": "gocacheshield",
+  "version": "1.0.0",
+  "description": "Production-grade smart cache resilience and concurrency protection library for Go, Node.js, Nest.js, PHP, and Laravel.",
+  "main": "packages/node/src/index.js",
+  "types": "packages/node/src/index.d.ts",
+  "scripts": {
+    "test": "node --test packages/node/test/*.test.js"
+  },
+  "keywords": [
+    "cache",
+    "stampede",
+    "resilience",
+    "coalescing",
+    "singleflight",
+    "bulkhead",
+    "jitter",
+    "negative-caching",
+    "nestjs",
+    "redis"
+  ],
+  "author": "Zihad Bepari",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zihad-Bepari/GoCacheShield.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Zihad-Bepari/GoCacheShield/issues"
+  },
+  "homepage": "https://github.com/Zihad-Bepari/GoCacheShield#readme"
+}
