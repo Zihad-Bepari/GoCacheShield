@@ -28,5 +28,8 @@
   "bugs": {
     "url": "https://github.com/Zihad-Bepari/GoCacheShield/issues"
   },
-  "homepage": "https://github.com/Zihad-Bepari/GoCacheShield#readme"
+  "homepage": "https://github.com/Zihad-Bepari/GoCacheShield#readme",
+  "dependencies": {
+    "gocacheshield": "file:packages/node"
+  }
 }

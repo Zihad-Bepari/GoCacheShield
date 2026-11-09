@@ -128,3 +128,53 @@ test('createNestCacheShield helper returns working instance', async () => {
   const res = await nestShield.getOrLoad('nest-test', 30, async () => 'hello nest');
   assert.equal(res, 'hello nest');
 });
+
+test('cacheShieldMiddleware: intercepts GET requests and caches responses', async () => {
+  const { cacheShieldMiddleware, CacheShield } = require('../src/index');
+  const shield = new CacheShield();
+  const mw = cacheShieldMiddleware({ shield, ttl: 10 });
+
+  let endpointCalled = 0;
+  const mockReq = { method: 'GET', url: '/api/v1/test-items', originalUrl: '/api/v1/test-items', headers: {} };
+  
+  // Call 1
+  let sentBody1 = null;
+  const mockRes1 = {
+    statusCode: 200,
+    headers: {},
+    setHeader(k, v) { this.headers[k] = v; },
+    getHeader(k) { return this.headers[k]; },
+    status(c) { this.statusCode = c; return this; },
+    send(b) { sentBody1 = b; return this; }
+  };
+  await mw(mockReq, mockRes1, () => {
+    endpointCalled++;
+    mockRes1.send(JSON.stringify({ data: 'item-1' }));
+  });
+
+  assert.equal(endpointCalled, 1);
+  assert.equal(sentBody1, JSON.stringify({ data: 'item-1' }));
+
+  // Call 2 (must be cache hit)
+  let sentBody2 = null;
+  const mockRes2 = {
+    statusCode: 200,
+    headers: {},
+    setHeader(k, v) { this.headers[k] = v; },
+    getHeader(k) { return this.headers[k]; },
+    status(c) { this.statusCode = c; return this; },
+    send(b) { sentBody2 = b; return this; }
+  };
+  await mw(mockReq, mockRes2, () => {
+    endpointCalled++;
+    mockRes2.send(JSON.stringify({ data: 'item-2' }));
+  });
+
+  assert.equal(endpointCalled, 1, 'endpoint must NOT be called on second request');
+  assert.equal(sentBody2, JSON.stringify({ data: 'item-1' }));
+  assert.equal(mockRes2.headers['X-Cache-Shield'], 'HIT');
+
+  const stats = shield.getStats();
+  assert.equal(stats.cacheHits, 1);
+  assert.equal(stats.savedDBQueries, 1);
+});
