@@ -5,7 +5,7 @@ This guide provides step-by-step instructions for installing, configuring, and d
 ---
 
 ## 📑 Table of Contents
-1. [Supported Platforms Summary](#supported-platforms-summary)
+1. [Supported Platforms & Installation Summary](#supported-platforms--installation-summary)
 2. [1. Go (Golang) Setup](#1-go-golang-setup)
    - [Installation](#go-installation)
    - [Basic Engine Setup](#basic-engine-setup)
@@ -14,11 +14,12 @@ This guide provides step-by-step instructions for installing, configuring, and d
    - [Cache Invalidation](#go-cache-invalidation)
 3. [2. Node.js & Express Setup](#2-nodejs--express-setup)
    - [Installation](#nodejs-installation)
-   - [1-Line Plug-and-Play Express Middleware](#1-line-plug-and-play-express-middleware)
+   - [1-Line Plug-and-Play Express Middleware (`app.js`)](#1-line-plug-and-play-express-middleware-appjs)
    - [Custom `CacheShield` Instance Usage](#custom-cacheshield-instance-usage)
    - [Runtime Observability & Metrics](#nodejs-runtime-observability--metrics)
 4. [3. NestJS Setup](#3-nestjs-setup)
-   - [Service & Interceptor Pattern](#nestjs-service--interceptor-pattern)
+   - [NestJS Installation](#nestjs-installation)
+   - [NestJS Service & Controller Integration](#nestjs-service--controller-integration)
 5. [4. PHP (Native / Pure) Setup](#4-php-native--pure-setup)
    - [Installation](#php-installation)
    - [Closure Pattern (`getOrLoad`)](#php-closure-pattern-getorload)
@@ -34,15 +35,15 @@ This guide provides step-by-step instructions for installing, configuring, and d
 
 ---
 
-## Supported Platforms Summary
+## Supported Platforms & Installation Summary
 
-| Platform | Package Manager | Package Identifier / Direct Install | Minimum Runtime |
+| Platform | Package Manager | Direct GitHub Install Command | Minimum Runtime |
 | :--- | :--- | :--- | :--- |
-| **Go** | `go get` | `github.com/Zihad-Bepari/GoCacheShield` | Go 1.22+ |
-| **Node.js** | `npm` / `yarn` / `pnpm` | `gocacheshield` *(or `github:Zihad-Bepari/GoCacheShield`)* | Node.js 18+ |
-| **NestJS** | `npm` | `gocacheshield` | NestJS 9+ |
-| **PHP** | `composer` | Direct VCS or local path repository | PHP 8.1+ |
-| **Laravel** | `composer` | Direct VCS or local path repository | Laravel 9, 10, 11 |
+| **Go** | `go get` | `go get github.com/Zihad-Bepari/GoCacheShield` | Go 1.22+ |
+| **Node.js** | `npm` / `yarn` / `pnpm` | `npm install github:Zihad-Bepari/GoCacheShield` | Node.js 18+ |
+| **NestJS** | `npm` / `yarn` / `pnpm` | `npm install github:Zihad-Bepari/GoCacheShield` | NestJS 9+ |
+| **PHP** | `composer` | `composer require zihad-bepari/gocacheshield:dev-main` | PHP 8.1+ |
+| **Laravel** | `composer` | `composer require zihad-bepari/gocacheshield:dev-main` | Laravel 9, 10, 11 |
 
 ---
 
@@ -207,29 +208,33 @@ err := productShield.Invalidate(ctx, "product:4521")
 
 ### Node.js Installation
 
-```bash
-# Via npm:
-npm install gocacheshield
+Install directly from GitHub into your Node.js project:
 
-# Or directly from the GitHub repository:
+```bash
+# Standard GitHub install:
 npm install github:Zihad-Bepari/GoCacheShield
 ```
 
-### 1-Line Plug-and-Play Express Middleware
+> **Note:** If you use yarn or pnpm:
+> `yarn add github:Zihad-Bepari/GoCacheShield` or `pnpm add github:Zihad-Bepari/GoCacheShield`
 
-Intercept public `GET` requests with automated caching, thundering herd request coalescing, and 404 negative caching:
+### 1-Line Plug-and-Play Express Middleware (`app.js`)
+
+To protect your Express application from Cache Stampedes, Thundering Herds, and 404 Penetration Attacks, simply plug `cacheShieldMiddleware` into `app.js`:
 
 ```javascript
+// app.js
 const express = require('express');
 const { cacheShieldMiddleware } = require('gocacheshield');
 
 const app = express();
 
-// Protect all public API routes (TTL: 60 seconds)
+// 🛡️ 1-Line Automated Route Caching & Anti-Stampede Protection (TTL: 60s):
 app.use(cacheShieldMiddleware({ ttl: 60 }));
 
+// Your normal endpoints execute safely without overloading the database:
 app.get('/api/v1/articles/:id', async (req, res) => {
-  // Heavy SQL / MongoDB query
+  // Executed ONLY on cache miss; duplicate requests are merged into 1 query
   const article = { id: req.params.id, title: 'Optimizing Microservices' };
   res.json(article);
 });
@@ -283,7 +288,15 @@ console.log({
 
 ## 3. NestJS Setup
 
-### NestJS Service & Interceptor Pattern
+### NestJS Installation
+
+Install directly from GitHub into your NestJS project:
+
+```bash
+npm install github:Zihad-Bepari/GoCacheShield
+```
+
+### NestJS Service & Controller Integration
 
 Register GoCacheShield as an injectable service:
 
@@ -298,14 +311,39 @@ export class CacheShieldService implements OnModuleDestroy {
 
   constructor() {
     this.shield = createNestCacheShield({
-      maxConcurrentLoads: 100,
-      jitterRatio: 0.15,
-      negativeTTL: 60,
+      maxConcurrentLoads: 100, // Max 100 parallel DB loads
+      jitterRatio: 0.15,        // +/- 15% TTL jitter
+      negativeTTL: 60,          // Cache 404s for 60s
     });
   }
 
   async onModuleDestroy() {
     await this.shield.close();
+  }
+}
+```
+
+Use inside any NestJS controller or service with automatic coalescing:
+
+```typescript
+// product.controller.ts
+import { Controller, Get, Param } from '@nestjs/common';
+import { CacheShieldService } from './cache-shield.service';
+
+@Controller('products')
+export class ProductController {
+  constructor(private readonly cacheShield: CacheShieldService) {}
+
+  @Get(':id')
+  async getProduct(@Param('id') id: string) {
+    return await this.cacheShield.shield.getOrLoad(`product:${id}`, 300, async () => {
+      // Executed ONLY on cache miss; 100 concurrent requests coalesce into 1 DB query
+      return await this.databaseFindProduct(id);
+    });
+  }
+
+  private async databaseFindProduct(id: string) {
+    return { id, name: 'Sample Product', price: 99.99 };
   }
 }
 ```
@@ -316,7 +354,17 @@ export class CacheShieldService implements OnModuleDestroy {
 
 ### PHP Installation
 
-Add GoCacheShield as a VCS repository in your `composer.json`:
+You can install GoCacheShield directly from GitHub into any PHP project using Composer.
+
+#### Option A: Quick Command Line (Recommended)
+Run these two commands in your project terminal:
+```bash
+composer config repositories.gocacheshield vcs https://github.com/Zihad-Bepari/GoCacheShield.git
+composer require zihad-bepari/gocacheshield:dev-main
+```
+
+#### Option B: Add to `composer.json` Manually
+Add GoCacheShield as a VCS repository inside your project's `composer.json`:
 
 ```json
 {
@@ -327,13 +375,12 @@ Add GoCacheShield as a VCS repository in your `composer.json`:
     }
   ],
   "require": {
-    "gocacheshield/php": "*"
+    "zihad-bepari/gocacheshield": "dev-main"
   }
 }
 ```
 
-Run composer update:
-
+Then run:
 ```bash
 composer update
 ```
