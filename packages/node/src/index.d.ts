@@ -36,3 +36,8 @@ export declare class CacheShield {
 }
 
 export declare function createNestCacheShield(options?: CacheShieldOptions): CacheShield;
+
+export declare class CacheShieldInterceptor {
+  constructor(shield?: CacheShield, options?: { ttl?: number; keyGenerator?: (ctx: any) => string });
+  intercept(context: any, next: any): Promise<any>;
+}

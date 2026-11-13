@@ -17,7 +17,13 @@ class CacheShield
     {
         $this->jitterRatio = $options['jitter_ratio'] ?? 0.10;
         $this->negativeTTL = $options['negative_ttl'] ?? 30;
-        $this->lockDir = $options['lock_dir'] ?? sys_get_temp_dir() . '/cacheshield_locks';
+        if (!empty($options['lock_dir'])) {
+            $this->lockDir = $options['lock_dir'];
+        } elseif (function_exists('storage_path') && is_dir(storage_path())) {
+            $this->lockDir = storage_path('framework/cacheshield');
+        } else {
+            $this->lockDir = sys_get_temp_dir() . '/cacheshield_locks';
+        }
         $this->customCacheDriver = $options['cache_driver'] ?? null;
 
         if (!is_dir($this->lockDir)) {
@@ -25,54 +31,44 @@ class CacheShield
         }
     }
 
-    /**
-     * Get value from cache or execute loader with stampede protection,
-     * TTL jitter, and negative caching.
-     */
+    // Get from cache or execute loader with stampede protection
     public function getOrLoad(string $key, int $ttlSeconds, Closure $loader)
     {
-        // Opportunistic cleanup of stale lock files (1 in 100 requests)
         if (mt_rand(1, 100) === 1) {
             $this->cleanStaleFiles();
         }
 
-        // 1. Check Negative Cache
+        // check negative cache
         if ($this->isNegative($key)) {
             throw new NotFoundException();
         }
 
-        // 2. Check Primary Cache
+        // check cache store
         $cached = $this->getCache($key);
         if ($cached !== null) {
             return $cached;
         }
 
-        // 3. Stampede Protection via Non-Blocking Inter-Process Lock (Works on cPanel shared hosting!)
+        // file lock for coalescing
         $lockFile = $this->lockDir . '/' . md5($key) . '.lock';
         $fp = fopen($lockFile, 'c+');
 
         if (!$fp) {
-            // Fallback if lock file cannot be created
             return $loader();
         }
 
-        // Try to become the Leader (acquire non-blocking exclusive lock)
+        // acquire exclusive lock for leader
         if (flock($fp, LOCK_EX | LOCK_NB)) {
             try {
-                // Double check cache in case another worker just finished
                 $doubleCheck = $this->getCache($key);
                 if ($doubleCheck !== null) {
                     return $doubleCheck;
                 }
 
-                // Execute User Loader (Leader)
+                // execute loader
                 try {
                     $result = $loader();
-
-                    // Apply TTL Jitter
                     $effectiveTTL = $this->applyJitter($ttlSeconds);
-
-                    // Store in Cache
                     $this->setCache($key, $result, $effectiveTTL);
                     $this->invalidateNegative($key);
 
@@ -86,22 +82,36 @@ class CacheShield
                 fclose($fp);
             }
         } else {
-            // We are a Follower: Wait for the Leader to finish (blocking shared lock with 3s timeout)
-            flock($fp, LOCK_SH);
-            try {
-                $fresh = $this->getCache($key);
-                if ($fresh !== null) {
-                    return $fresh;
+            // follower wait loop
+            $waitStart = microtime(true);
+            $acquiredLock = false;
+
+            while ((microtime(true) - $waitStart) < 3.0) {
+                if (flock($fp, LOCK_SH | LOCK_NB)) {
+                    $acquiredLock = true;
+                    break;
                 }
-                if ($this->isNegative($key)) {
-                    throw new NotFoundException();
-                }
-                // If leader somehow died without populating, fallback safely
-                return $loader();
-            } finally {
-                flock($fp, LOCK_UN);
-                fclose($fp);
+                usleep(5000);
             }
+
+            if ($acquiredLock) {
+                try {
+                    $fresh = $this->getCache($key);
+                    if ($fresh !== null) {
+                        return $fresh;
+                    }
+                    if ($this->isNegative($key)) {
+                        throw new NotFoundException();
+                    }
+                } finally {
+                    flock($fp, LOCK_UN);
+                    fclose($fp);
+                }
+            } else {
+                @fclose($fp);
+            }
+
+            return $loader();
         }
     }
 
@@ -149,9 +159,19 @@ class CacheShield
         // File-based cache for standard cPanel without Redis/APCu
         $cacheFile = $this->lockDir . '/' . md5('data:' . $key) . '.cache';
         if (file_exists($cacheFile)) {
-            $data = @unserialize(file_get_contents($cacheFile));
-            if ($data && isset($data['exp']) && $data['exp'] > time()) {
-                return $data['val'];
+            $rfp = @fopen($cacheFile, 'r');
+            if ($rfp) {
+                if (flock($rfp, LOCK_SH)) {
+                    $raw = stream_get_contents($rfp);
+                    flock($rfp, LOCK_UN);
+                    fclose($rfp);
+                    $data = @unserialize($raw, ['allowed_classes' => false]);
+                    if (is_array($data) && isset($data['exp']) && $data['exp'] > time()) {
+                        return $data['val'];
+                    }
+                } else {
+                    fclose($rfp);
+                }
             }
             @unlink($cacheFile);
         }

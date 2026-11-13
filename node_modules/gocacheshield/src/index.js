@@ -445,6 +445,9 @@ module.exports = {
   ErrCacheMiss,
   ErrClosed,
   createNestCacheShield,
+  get CacheShieldInterceptor() {
+    return require('./nest').CacheShieldInterceptor;
+  },
   cacheShieldMiddleware,
   getDefaultCacheShield,
 };

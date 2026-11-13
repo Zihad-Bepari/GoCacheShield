@@ -61,39 +61,36 @@ func (e *Engine) GetOrLoadRaw(
 		return nil, ErrClosed
 	}
 
-	// 1. Check Negative Cache
+	// check negative cache
 	if e.negCache.IsNegative(key) {
 		return nil, ErrNotFound
 	}
 
-	// 2. Check Cache Store
+	// check primary cache store
 	cached, err := e.opts.store.Get(ctx, key)
 	if err == nil {
-		// Cache Hit
 		return cached, nil
 	}
 
 	var isBackendFailure bool
 	if !errors.Is(err, ErrCacheMiss) {
-		// Cache backend produced an unexpected error (outage, network partition, etc.)
 		isBackendFailure = true
 	}
 
-	// 3. Request Coalescing via Coalescer Hub
+	// coalesce concurrent calls
 	raw, err := e.coalescer.Do(ctx, key, func(execCtx context.Context) ([]byte, error) {
-		// Double check negative cache
 		if e.negCache.IsNegative(key) {
 			return nil, ErrNotFound
 		}
 
-		// Double check cache store in case a parallel flight just finished
+		// secondary cache check after lock acquisition
 		if !isBackendFailure {
 			if doubleCheck, dcErr := e.opts.store.Get(execCtx, key); dcErr == nil {
 				return doubleCheck, nil
 			}
 		}
 
-		// 4. Acquire Bulkhead Permit
+		// acquire bulkhead slot
 		activeBulkhead := e.bulkhead
 		if isBackendFailure {
 			activeBulkhead = e.fallbackBulkhead
@@ -111,7 +108,7 @@ func (e *Engine) GetOrLoadRaw(
 		}
 		defer release()
 
-		// 5. Execute User Loader
+		// execute loader
 		val, loadErr := loader(execCtx)
 		if loadErr != nil {
 			if errors.Is(loadErr, ErrNotFound) {
@@ -120,12 +117,9 @@ func (e *Engine) GetOrLoadRaw(
 			return nil, loadErr
 		}
 
-		// 6. Apply Jitter to TTL
+		// apply ttl jitter and store
 		effectiveTTL := e.jitter.Apply(ttl)
-
-		// 7. Store in Cache Backend
 		if setErr := e.opts.store.Set(execCtx, key, val, effectiveTTL); setErr != nil {
-			// Write error to cache does not fail the read, but invalidates negative status
 			e.negCache.Invalidate(key)
 			return val, nil
 		}
